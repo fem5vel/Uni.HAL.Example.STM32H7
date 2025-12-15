@@ -32,11 +32,8 @@ project(uni_hal_example_stm32h7 LANGUAGES C ASM)
 
 # device
 
-if(OX_TARGET STREQUAL "NUCLEO")
-    add_compile_definitions(TARGET_DEVICE_NUCLEO)
-else()
-    message(FATAL_ERROR "Unknown OX_TARGET")
-endif()
+add_compile_definitions(TARGET_DEVICE_NUCLEO)
+
 
 
 # Heap
