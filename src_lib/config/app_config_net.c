@@ -11,8 +11,6 @@
 // ox app
 #include "config/app_config_net.h"
 
-#include "app_config_telemetry.h"
-
 //
 // Globals
 //
@@ -53,7 +51,6 @@ ox_net_context_t g_ox_net_ctx = {
                 .icmp_cnt_ok = g_ox_net_icmp_cnt_ok,
                 .icmp_cnt_timeout_seq = g_ox_net_icmp_cnt_timeout_seq,
                 .icmp_time_last = g_ox_net_icmp_time_last,
-                .telemetry =  &g_ox_telemetry_ctx
         }
 };
 

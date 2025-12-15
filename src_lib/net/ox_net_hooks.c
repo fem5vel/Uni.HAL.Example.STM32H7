@@ -6,10 +6,8 @@
 #include <FreeRTOS_IP.h>
 
 // ox
-#include "config/app_config_telemetry.h"
 #include "io/uni_hal_io_stdio.h"
 #include "rng/ox_rng.h"
-#include "telemetry/ox_telemetry.h"
 
 
 //
@@ -23,11 +21,9 @@ void vApplicationIPNetworkEventHook_Multi( eIPCallbackEvent_t eNetworkEvent,
     switch (eNetworkEvent) {
         case eNetworkUp:
             uni_hal_io_stdio_printf("LINK UP \r\n");
-            ox_telemetry_set_u32(&g_ox_telemetry_ctx, OX_TELEMETRY_ID_NET_LINK_UP, 1);
             break;
         case eNetworkDown:
             uni_hal_io_stdio_printf("LINK DOWN \r\n");
-            ox_telemetry_set_u32(&g_ox_telemetry_ctx, OX_TELEMETRY_ID_NET_LINK_UP, 0);
             break;
         default:
             break;

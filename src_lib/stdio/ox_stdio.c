@@ -38,11 +38,10 @@ _Noreturn void _ox_stdio_task(void* params) {
 #if defined(STM32H7)
     uni_hal_io_stdio_printf("* MCU Revision     = %d \r\n", (int) uni_hal_core_stm32h7_revision_get());
 #endif
-    uni_hal_io_stdio_printf("* Reset Counter    = %d \r\n\r\n", (int) ox_rstcnt_get(ctx->config.rstcnt));
 
     while (true) { //-V1044 //-V776
         uni_hal_io_stdio_printf("MEOW-MEOW\r\n");
-        vTaskDelay(100U);
+        vTaskDelay(1000U);
     }
 
 }

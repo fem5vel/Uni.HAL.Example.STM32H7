@@ -12,8 +12,6 @@
 // os
 #include "net/ox_net.h"
 
-#include "telemetry/ox_telemetry.h"
-
 
 //
 // Globals
@@ -164,14 +162,6 @@ _Noreturn static void _ox_net_icmp_task( void * params) { //-V1082
                 ctx->state.icmp_callback(ctx->state.icmp_callback_cookie, net_addr, ctx->config.icmp_time_last[idx]);
             }
         }
-
-        ox_telemetry_set_u32(ctx->config.telemetry, OX_TELEMETRY_ID_NET_ICMP_1_TOTAL, ctx->config.icmp_cnt_total[0]);
-        ox_telemetry_set_u32(ctx->config.telemetry, OX_TELEMETRY_ID_NET_ICMP_1_SUCCESS, ctx->config.icmp_cnt_ok[0]);
-        ox_telemetry_set_u32(ctx->config.telemetry, OX_TELEMETRY_ID_NET_ICMP_1_LASTTIME, ctx->config.icmp_time_last[0]);
-
-        ox_telemetry_set_u32(ctx->config.telemetry, OX_TELEMETRY_ID_NET_ICMP_2_TOTAL, ctx->config.icmp_cnt_total[1]);
-        ox_telemetry_set_u32(ctx->config.telemetry, OX_TELEMETRY_ID_NET_ICMP_2_SUCCESS, ctx->config.icmp_cnt_ok[1]);
-        ox_telemetry_set_u32(ctx->config.telemetry, OX_TELEMETRY_ID_NET_ICMP_2_LASTTIME, ctx->config.icmp_time_last[1]);
 
         // reboot on disconnect
         // bool reboot = true;

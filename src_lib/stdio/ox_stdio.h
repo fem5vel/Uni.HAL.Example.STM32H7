@@ -12,9 +12,7 @@
 #include <uni_hal.h>
 
 // ox
-#include "adc/ox_adc.h"
 #include "net/ox_net.h"
-#include "rstcnt/ox_rstcnt.h"
 
 
 //
@@ -23,9 +21,7 @@
 
 typedef struct {
     uni_hal_io_context_t* io;
-    ox_adc_context_t* adc;
     ox_net_context_t* net;
-    ox_rstcnt_context_t* rstcnt;
     bool enable_timer;
 } ox_stdio_config_t;
 

@@ -7,9 +7,6 @@
 // FreeRTOS
 #include <FreeRTOS_IP.h>
 
-// ox
-#include "telemetry/ox_telemetry.h"
-
 
 //
 // Typedefs
@@ -37,8 +34,6 @@ typedef struct {
     uint32_t*          icmp_cnt_ok;
     uint32_t*          icmp_cnt_timeout_seq;
     uint32_t*          icmp_time_last;
-
-    ox_telemetry_context_t* telemetry;
 } ox_net_config_t;
 
 

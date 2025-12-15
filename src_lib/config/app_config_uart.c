@@ -12,7 +12,7 @@
 //
 
 #if defined(TARGET_DEVICE_NUCLEO)
-uni_hal_gpio_pin_context_t g_ox_stdio_pin_rx_ctx = {
+uni_hal_gpio_pin_context_t g_ox_uart_pin_rx_ctx = {
     .gpio_bank = UNI_HAL_CORE_PERIPH_GPIO_D,
     .gpio_pin = UNI_HAL_GPIO_PIN_8,
     .gpio_pull = UNI_HAL_GPIO_PULL_NO,
@@ -20,7 +20,7 @@ uni_hal_gpio_pin_context_t g_ox_stdio_pin_rx_ctx = {
     .alternate = UNI_HAL_GPIO_ALTERNATE_7,
 };
 
-uni_hal_gpio_pin_context_t g_ox_stdio_pin_tx_ctx = {
+uni_hal_gpio_pin_context_t g_ox_uart_pin_tx_ctx = {
     .gpio_bank = UNI_HAL_CORE_PERIPH_GPIO_D,
     .gpio_pin = UNI_HAL_GPIO_PIN_9,
     .gpio_pull = UNI_HAL_GPIO_PULL_NO,
