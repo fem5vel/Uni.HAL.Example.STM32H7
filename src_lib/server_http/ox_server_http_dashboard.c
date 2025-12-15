@@ -22,6 +22,7 @@
 #include "ox_asset_index.h"
 #include "ox_asset_dashboard.h"
 #include "ox_asset_favicon.h"
+#include "io/uni_hal_io_stdio.h"
 
 
 //
@@ -30,14 +31,13 @@
 static size_t _ox_server_dashboard_handler_status(void* userdata, uint8_t* buf_out, size_t buf_out_size, const uint8_t* buf_in, size_t buf_in_len) {
     (void)buf_in;
     (void)buf_in_len;
-    (void)buf_out;
-    (void)buf_out_size;
+    (void)userdata;
 
-    ox_server_dashboard_context_t* ctx = (ox_server_dashboard_context_t*)userdata;
-    (void)ctx;
+    if (!buf_out || !buf_out_size) {
+        return 0;
+    }
 
-    size_t result = 0U;
-    return result;
+    return uni_hal_io_stdio_snprintf((char*)buf_out, buf_out_size, "{}");
 }
 
 //
