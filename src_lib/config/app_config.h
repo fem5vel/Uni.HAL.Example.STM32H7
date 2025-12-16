@@ -9,4 +9,3 @@
 #include "config/app_config_segger.h"
 #include "config/app_config_server_http.h"
 #include "config/app_config_stdio.h"
-#include "config/app_config_uart.h"

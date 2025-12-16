@@ -61,9 +61,6 @@ int main(void) {
     uni_hal_segger_rtt_stdio_init(&g_ox_segger_stdio_ctx);
 #endif
     
-    // UART
-    uni_hal_usart_init(&g_ox_uart_ctx);
-
     // STDIO
     ox_stdio_init(&g_ox_stdio_ctx);
 
