@@ -90,7 +90,7 @@ static size_t _ox_server_updater_handler_upload(void* userdata, uint8_t* buf_out
         g_decrypt_buf_fill = 0;
         g_block_counter = 0;
 
-        if (true_size > (1.5 * 1024 * 1024)) {
+        if (true_size > (1 * 1024 * 1024)) {
             result = uni_hal_io_stdio_snprintf((char*)buf_out, buf_out_size, "FAIL: Invalid firmware size");
         } else {
             result = uni_hal_io_stdio_snprintf((char*)buf_out, buf_out_size, "%d", true_size);
@@ -186,6 +186,42 @@ static size_t _ox_server_updater_handler_upload(void* userdata, uint8_t* buf_out
     return result;
 }
 
+static size_t _ox_server_updater_handler_download(void* userdata, uint8_t* buf_out, size_t buf_out_size, const uint8_t* buf_in, size_t buf_in_len)
+{
+    static size_t g_download_offset = 0;
+    static const size_t FIRMWARE_SIZE = 1 * 1024 * 1024; // 1 MiB
+
+    size_t result = 0U;
+    (void)userdata;
+    (void)buf_in_len;
+
+    if (buf_in != NULL) {
+        g_download_offset = 0;
+        return 0;
+    }
+
+    if (buf_out != NULL && buf_out_size > 0) {
+        size_t remaining = FIRMWARE_SIZE - g_download_offset;
+
+        if (remaining == 0) {
+            g_download_offset = 0;
+            return 0;
+        }
+
+        size_t to_read = uni_common_math_min(buf_out_size, remaining);
+
+        const uint8_t* flash_ptr = (const uint8_t*)(FLASH_START_ADDR + FLASH_BANK_SIZE);
+        memcpy(buf_out, flash_ptr, to_read);
+        g_download_offset += to_read;
+        result = to_read;
+
+
+        portYIELD();
+    }
+
+    return result;
+}
+
 static size_t _ox_server_updater_handler_apply(void* userdata, uint8_t* buf_out, size_t buf_out_size, const uint8_t* buf_in, size_t buf_in_len)
 {
     (void)userdata;
@@ -242,6 +278,6 @@ bool ox_server_updater_init(ox_server_updater_context_t* ctx, uni_net_http_serve
     result &= uni_net_http_server_register_handler_ex(server, UNI_NET_HTTP_COMMAND_GET, "/updater/status", _ox_server_updater_handler_status, ctx);
     result &= uni_net_http_server_register_handler_ex(server, UNI_NET_HTTP_COMMAND_GET, "/updater/apply", _ox_server_updater_handler_apply, ctx);
     result &= uni_net_http_server_register_handler_ex(server, UNI_NET_HTTP_COMMAND_POST, "/updater/upload", _ox_server_updater_handler_upload, ctx);
-
+    result &= uni_net_http_server_register_handler_ex(server, UNI_NET_HTTP_COMMAND_GET, "/updater/download", _ox_server_updater_handler_download, ctx);
     return result;
 }
