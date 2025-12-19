@@ -40,7 +40,6 @@ _Noreturn void _ox_stdio_task(void* params) {
 #endif
 
     while (true) { //-V1044 //-V776
-        uni_hal_io_stdio_printf("MEOW-MEOW\r\n");
         vTaskDelay(1000U);
     }
 

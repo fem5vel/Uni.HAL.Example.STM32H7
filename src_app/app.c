@@ -14,6 +14,7 @@
 #include "config/app_config.h"
 #include "config/app_config_crypto.h"
 #include "config/app_config_net.h"
+#include "config/app_config_uart.h"
 #include "crypto/ox_hmac.h"
 #include "net/ox_net.h"
 #include "stdio/ox_stdio.h"
@@ -60,7 +61,10 @@ int main(void) {
 #if !defined(UNI_HAl_TARGET_MCU_PC)
     uni_hal_segger_rtt_stdio_init(&g_ox_segger_stdio_ctx);
 #endif
-    
+
+    // UART
+    uni_hal_usart_init(&g_ox_uart_ctx);
+
     // STDIO
     ox_stdio_init(&g_ox_stdio_ctx);
 
