@@ -14,10 +14,13 @@
 #include "config/app_config.h"
 #include "config/app_config_crypto.h"
 #include "config/app_config_net.h"
+#include "config/app_config_uart.h"
 #include "crypto/ox_hmac.h"
 #include "net/ox_net.h"
 #include "stdio/ox_stdio.h"
 #include "segger/ox_segger_sysview.h"
+#include "trx/app_config_trx.h"
+#include  "trx/ox_trx.h"
 
 
 //
@@ -60,12 +63,25 @@ int main(void) {
 #if !defined(UNI_HAl_TARGET_MCU_PC)
     uni_hal_segger_rtt_stdio_init(&g_ox_segger_stdio_ctx);
 #endif
-    
+
+    // UART
+    uni_hal_usart_init(&g_ox_uart_ctx);
+
     // STDIO
     ox_stdio_init(&g_ox_stdio_ctx);
 
     // FLASH
     uni_hal_flash_init();
+
+    uni_hal_io_stdio_printf("TRX SPI init\r\n");
+
+    //SPI
+    uni_hal_spi_init(g_ox_trx_ctx.config.spi);
+
+    uni_hal_io_stdio_printf("TRX context init\r\n");
+
+    // TRX
+    ox_trx_init(&g_ox_trx_ctx);
 
     uni_hal_io_stdio_printf("NET init\r\n");
 

@@ -20,10 +20,8 @@ void vApplicationIPNetworkEventHook_Multi( eIPCallbackEvent_t eNetworkEvent,
 
     switch (eNetworkEvent) {
         case eNetworkUp:
-            uni_hal_io_stdio_printf("LINK UP \r\n");
             break;
-        case eNetworkDown:
-            uni_hal_io_stdio_printf("LINK DOWN \r\n");
+    case eNetworkDown:
             break;
         default:
             break;
