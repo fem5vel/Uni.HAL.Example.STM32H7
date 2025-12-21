@@ -40,6 +40,7 @@ _Noreturn void _ox_stdio_task(void* params) {
 #endif
 
     while (true) { //-V1044 //-V776
+
         vTaskDelay(1000U);
     }
 

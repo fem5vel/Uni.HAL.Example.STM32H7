@@ -21,7 +21,7 @@ void vApplicationIPNetworkEventHook_Multi( eIPCallbackEvent_t eNetworkEvent,
     switch (eNetworkEvent) {
         case eNetworkUp:
             break;
-        case eNetworkDown:
+    case eNetworkDown:
             break;
         default:
             break;

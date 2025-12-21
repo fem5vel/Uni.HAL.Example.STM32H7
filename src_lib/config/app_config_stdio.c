@@ -5,6 +5,7 @@
 // ox app
 #include "config/app_config_net.h"
 #include "config/app_config_uart.h"
+#include "config/app_config_segger.h"
 #include "config/app_config_stdio.h"
 
 //

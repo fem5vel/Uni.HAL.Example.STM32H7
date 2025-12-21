@@ -19,6 +19,8 @@
 #include "net/ox_net.h"
 #include "stdio/ox_stdio.h"
 #include "segger/ox_segger_sysview.h"
+#include "trx/app_config_trx.h"
+#include  "trx/ox_trx.h"
 
 
 //
@@ -70,6 +72,16 @@ int main(void) {
 
     // FLASH
     uni_hal_flash_init();
+
+    uni_hal_io_stdio_printf("TRX SPI init\r\n");
+
+    //SPI
+    uni_hal_spi_init(g_ox_trx_ctx.config.spi);
+
+    uni_hal_io_stdio_printf("TRX context init\r\n");
+
+    // TRX
+    ox_trx_init(&g_ox_trx_ctx);
 
     uni_hal_io_stdio_printf("NET init\r\n");
 
