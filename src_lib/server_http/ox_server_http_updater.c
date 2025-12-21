@@ -23,6 +23,7 @@
 #include <mbedtls/ccm.h>
 #include "trx/ox_trx_decrypt.h"
 #include "trx/app_config_trx.h"
+#include "perf/ox_perf_stats.h"
 
 //
 // Defines
@@ -50,6 +51,16 @@ static uint64_t g_block_counter = 0;
 
 static ox_trx_decrypt_context_t g_decrypt_ctx = {0};
 
+static ox_perf_counter_t g_perf_decrypt = {0};
+static ox_perf_counter_t g_perf_flash = {0};
+static ox_perf_counter_t g_perf_total = {0};
+static ox_perf_counter_t g_perf_spi_decrypt = {0};
+static ox_perf_counter_t g_perf_spi_queue = {0};
+static ox_perf_counter_t g_perf_spi_total = {0};
+
+#ifndef CPU_FREQ_HZ
+#define CPU_FREQ_HZ 400000000U
+#endif
 //
 // Private
 //
@@ -58,12 +69,14 @@ static uint32_t g_app_flash_write_off = 0;
 static uint8_t g_app_flash_buf[FLASH_WRITE_ALIGN];
 static size_t g_app_flash_buf_fill = 0;
 
-static size_t _ox_server_updater_handler_upload(void* userdata, uint8_t* buf_out, size_t buf_out_size, const uint8_t* buf_in, size_t buf_in_len)
+static size_t _ox_server_updater_handler_upload(void* userdata, uint8_t* buf_out,
+                                                 size_t buf_out_size, const uint8_t* buf_in,
+                                                 size_t buf_in_len)
 {
     size_t result = 0U;
-
     (void)userdata;
 
+    // Начало первого вызова - инициализация
     if (buf_in != NULL && g_app_flash_write_off == 0 && g_app_flash_buf_fill == 0) {
         if (!g_aes_ccm_initialized) {
             mbedtls_ccm_init(&g_aes_ccm_ctx);
@@ -77,6 +90,12 @@ static size_t _ox_server_updater_handler_upload(void* userdata, uint8_t* buf_out
         g_decrypt_buf_fill = 0;
         g_block_counter = 0;
 
+        ox_perf_counter_reset(&g_perf_decrypt);
+        ox_perf_counter_reset(&g_perf_flash);
+        ox_perf_counter_reset(&g_perf_total);
+
+        uni_hal_io_stdio_printf("[UPLOAD] Starting firmware upload with performance monitoring\r\n");
+
         uni_hal_flash_erase_bank();
     }
 
@@ -86,28 +105,38 @@ static size_t _ox_server_updater_handler_upload(void* userdata, uint8_t* buf_out
 
         if (g_app_flash_buf_fill > 0)
         {
+            ox_perf_counter_start(&g_perf_flash);
             memset(&g_app_flash_buf[g_app_flash_buf_fill], 0xFF, FLASH_WRITE_ALIGN - g_app_flash_buf_fill);
-            if (uni_hal_flash_write(FLASH_START_ADDR + g_app_flash_write_off, FLASH_WRITE_ALIGN, g_app_flash_buf) != FLASH_WRITE_ALIGN)
+            if (uni_hal_flash_write(FLASH_START_ADDR + g_app_flash_write_off,
+                                    FLASH_WRITE_ALIGN, g_app_flash_buf) != FLASH_WRITE_ALIGN)
             {
-
+                // Ошибка записи
             }
+            ox_perf_counter_stop(&g_perf_flash, FLASH_WRITE_ALIGN);
         }
+
+        uni_hal_io_stdio_printf("\r\n[UPLOAD] === Upload Complete ===\r\n");
+        ox_perf_counter_print(&g_perf_decrypt, "DECRYPT", CPU_FREQ_HZ);
+        ox_perf_counter_print(&g_perf_flash, "FLASH_WRITE", CPU_FREQ_HZ);
+        ox_perf_counter_print(&g_perf_total, "TOTAL_PROCESSING", CPU_FREQ_HZ);
 
         g_app_flash_buf_fill = 0;
         g_app_flash_write_off = 0;
         g_decrypt_buf_fill = 0;
         g_block_counter = 0;
 
-        if (true_size != (1 * 1024 * 1024)) {
-            result = (size_t)snprintf((char*)buf_out, buf_out_size, "%d", true_size);
-        } else {
-            result = (size_t)snprintf((char*)buf_out, buf_out_size, "%d", true_size);
-        }
+        result = (size_t)snprintf((char*)buf_out, buf_out_size, "%d", true_size);
     }
+    // Обработка входящих данных
     else if (buf_in != NULL && buf_in_len > 0)
     {
-        const size_t ENCRYPTED_BLOCK_SIZE = AES_NONCE_SIZE + AES_BLOCK_SIZE + AES_MAC_SIZE; // 8 + 32 + 8 = 48
+        // Начало измерения общего времени обработки пакета
+        ox_perf_counter_start(&g_perf_total);
+
+        const size_t ENCRYPTED_BLOCK_SIZE = AES_NONCE_SIZE + AES_BLOCK_SIZE + AES_MAC_SIZE;
         size_t buf_in_offset = 0;
+        size_t bytes_decrypted_this_call = 0;
+        size_t bytes_written_this_call = 0;
 
         while (buf_in_offset < buf_in_len) {
             size_t bytes_needed = ENCRYPTED_BLOCK_SIZE - g_decrypt_buf_fill;
@@ -122,8 +151,9 @@ static size_t _ox_server_updater_handler_upload(void* userdata, uint8_t* buf_out
                 uint8_t* nonce = &g_decrypt_buf[0];
                 uint8_t* ciphertext = &g_decrypt_buf[AES_NONCE_SIZE];
                 uint8_t* mac = &g_decrypt_buf[AES_NONCE_SIZE + AES_BLOCK_SIZE];
-
                 uint8_t plaintext[AES_BLOCK_SIZE];
+
+                ox_perf_counter_start(&g_perf_decrypt);
 
                 int ret = mbedtls_ccm_auth_decrypt(&g_aes_ccm_ctx,
                                                    AES_BLOCK_SIZE,
@@ -132,6 +162,8 @@ static size_t _ox_server_updater_handler_upload(void* userdata, uint8_t* buf_out
                                                    ciphertext, plaintext,
                                                    mac, AES_MAC_SIZE);
 
+                ox_perf_counter_stop(&g_perf_decrypt, AES_BLOCK_SIZE);
+
                 if (ret != 0) {
                     g_decrypt_buf_fill = 0;
                     return 0;
@@ -139,21 +171,30 @@ static size_t _ox_server_updater_handler_upload(void* userdata, uint8_t* buf_out
 
                 g_block_counter++;
                 g_decrypt_buf_fill = 0;
+                bytes_decrypted_this_call += AES_BLOCK_SIZE;
 
                 for (size_t i = 0; i < AES_BLOCK_SIZE; i++) {
                     g_app_flash_buf[g_app_flash_buf_fill++] = plaintext[i];
 
                     if (g_app_flash_buf_fill == FLASH_WRITE_ALIGN) {
+                        ox_perf_counter_start(&g_perf_flash);
+
                         if (uni_hal_flash_write(FLASH_START_ADDR + g_app_flash_write_off,
                                                FLASH_WRITE_ALIGN, g_app_flash_buf) != FLASH_WRITE_ALIGN) {
                             return 0;
                         }
+
+                        ox_perf_counter_stop(&g_perf_flash, FLASH_WRITE_ALIGN);
+
                         g_app_flash_write_off += FLASH_WRITE_ALIGN;
                         g_app_flash_buf_fill = 0;
+                        bytes_written_this_call += FLASH_WRITE_ALIGN;
                     }
                 }
             }
         }
+
+        ox_perf_counter_stop(&g_perf_total, buf_in_len);
 
         result = buf_in_len;
     }
@@ -162,25 +203,26 @@ static size_t _ox_server_updater_handler_upload(void* userdata, uint8_t* buf_out
 }
 
 static size_t _ox_server_updater_handler_spi(void* userdata, uint8_t* buf_out,
-                                                 size_t buf_out_size, const uint8_t* buf_in,
-                                                 size_t buf_in_len) {
+                                              size_t buf_out_size, const uint8_t* buf_in,
+                                              size_t buf_in_len) {
     size_t result = 0U;
     (void)userdata;
 
     if (buf_in != NULL && g_decrypt_ctx.initialized == false) {
-        // Инициализация контекста дешифрования
         uni_hal_io_stdio_printf("[SPI] Decrypt context initialization...\r\n");
         if (!ox_trx_decrypt_init(&g_decrypt_ctx)) {
-            // Ошибка инициализации дешифрования
             uni_hal_io_stdio_printf("[SPI] ERROR: Failed to initialize decryption context\r\n");
             return 0;
         }
-        // Контекст успешно инициализирован
-        uni_hal_io_stdio_printf("[SPI] Decrypt context initialized successfully\r\n");
+
+        ox_perf_counter_reset(&g_perf_spi_decrypt);
+        ox_perf_counter_reset(&g_perf_spi_queue);
+        ox_perf_counter_reset(&g_perf_spi_total);
+
+        uni_hal_io_stdio_printf("[SPI] Decrypt context initialized with performance monitoring\r\n");
     }
 
     if (buf_out != NULL && buf_out_size > 0) {
-        // Ожидание завершения всех передач SPI
         uni_hal_io_stdio_printf("[SPI] Waiting for SPI transfers to complete...\r\n");
 
         int timeout = 0;
@@ -191,30 +233,42 @@ static size_t _ox_server_updater_handler_spi(void* userdata, uint8_t* buf_out,
         }
 
         if (timeout >= 1000) {
-            // Превышено время ожидания SPI
             uni_hal_io_stdio_printf("[SPI] WARNING: SPI timeout exceeded\r\n");
         }
 
+        uni_hal_io_stdio_printf("\r\n[SPI] === SPI Transfer Complete ===\r\n");
+        ox_perf_counter_print(&g_perf_spi_decrypt, "SPI_DECRYPT", CPU_FREQ_HZ);
+        ox_perf_counter_print(&g_perf_spi_queue, "SPI_QUEUE_SEND", CPU_FREQ_HZ);
+        ox_perf_counter_print(&g_perf_spi_total, "SPI_TOTAL", CPU_FREQ_HZ);
+
         ox_trx_decrypt_deinit(&g_decrypt_ctx);
 
-        uint64_t bytes_transmitted = (unsigned long)g_decrypt_ctx.block_counter * AES_BLOCK_SIZE;
-        // Передача завершена: количество блоков и байт
-        uni_hal_io_stdio_printf("[SPI] Transfer complete. Total blocks: %lu, bytes: %lu\r\n", (unsigned long)g_decrypt_ctx.block_counter, (unsigned long) bytes_transmitted);
+        uint64_t bytes_transmitted = (uint64_t)g_decrypt_ctx.block_counter * AES_BLOCK_SIZE;
 
-        result = (size_t)snprintf((char*)buf_out, buf_out_size, "%llu", bytes_transmitted);
+        uint32_t blocks = (uint32_t)g_decrypt_ctx.block_counter;
+        uint32_t bytes_low = (uint32_t)(bytes_transmitted & 0xFFFFFFFFUL);
+
+        uni_hal_io_stdio_printf("[SPI] Transfer complete. Total blocks: %lu, bytes: %lu\r\n",
+                                (unsigned long)blocks,
+                                (unsigned long)bytes_low);
+
+        result = (size_t)snprintf((char*)buf_out, buf_out_size, "%lu", (unsigned long)bytes_low);
     }
     else if (buf_in != NULL && buf_in_len > 0) {
-        // Получены зашифрованные данные
-        uni_hal_io_stdio_printf("[SPI] Received %u bytes of encrypted data\r\n", buf_in_len);
+        uni_hal_io_stdio_printf("[SPI] Received %u bytes of encrypted data\r\n", (unsigned int)buf_in_len);
 
-        if (ox_trx_decrypt_process(&g_decrypt_ctx, &g_ox_trx_ctx, buf_in, buf_in_len)) {
-            // Данные успешно обработаны
-            uni_hal_io_stdio_printf("[SPI] Data processed successfully. Current block counter: %lu\r\n", (unsigned  long)g_decrypt_ctx.block_counter);
+        ox_perf_counter_start(&g_perf_spi_total);
+
+        if (ox_trx_decrypt_process_with_perf(&g_decrypt_ctx, &g_ox_trx_ctx, buf_in, buf_in_len,
+                                              &g_perf_spi_decrypt, &g_perf_spi_queue)) {
+            uni_hal_io_stdio_printf("[SPI] Data processed successfully. Block counter: %lu\r\n",
+                                    (unsigned long)g_decrypt_ctx.block_counter);
             result = buf_in_len;
         } else {
-            // Ошибка обработки данных
             uni_hal_io_stdio_printf("[SPI] ERROR: Failed to process data\r\n");
         }
+
+        ox_perf_counter_stop(&g_perf_spi_total, buf_in_len);
     }
 
     return result;

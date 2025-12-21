@@ -134,3 +134,85 @@ void ox_trx_decrypt_deinit(ox_trx_decrypt_context_t* ctx) {
 
     ctx->initialized = false;
 }
+
+bool ox_trx_decrypt_process_with_perf(ox_trx_decrypt_context_t* ctx, ox_trx_context_t* trx_ctx,
+                                       const uint8_t* buf_in, size_t buf_in_len,
+                                       ox_perf_counter_t* perf_decrypt,
+                                       ox_perf_counter_t* perf_queue) {
+    if (ctx == NULL || !ctx->initialized || buf_in == NULL || buf_in_len == 0) {
+        uni_hal_io_stdio_printf("[DECRYPT] ERROR: Invalid parameters\r\n");
+        return false;
+    }
+
+    mbedtls_ccm_context* aes_ctx = _get_aes_ctx(ctx);
+    size_t buf_in_offset = 0;
+
+    while (buf_in_offset < buf_in_len) {
+        size_t bytes_needed = ENCRYPTED_BLOCK_SIZE - ctx->decrypt_buf_fill;
+        size_t bytes_available = buf_in_len - buf_in_offset;
+        size_t bytes_to_copy = (bytes_available < bytes_needed) ? bytes_available : bytes_needed;
+
+        memcpy(&ctx->decrypt_buf[ctx->decrypt_buf_fill], &buf_in[buf_in_offset], bytes_to_copy);
+        ctx->decrypt_buf_fill += bytes_to_copy;
+        buf_in_offset += bytes_to_copy;
+
+        if (ctx->decrypt_buf_fill == ENCRYPTED_BLOCK_SIZE) {
+            uint8_t* nonce = &ctx->decrypt_buf[0];
+            uint8_t* ciphertext = &ctx->decrypt_buf[AES_NONCE_SIZE];
+            uint8_t* mac = &ctx->decrypt_buf[AES_NONCE_SIZE + AES_BLOCK_SIZE];
+            uint8_t plaintext[AES_BLOCK_SIZE];
+
+            if (perf_decrypt != NULL) {
+                ox_perf_counter_start(perf_decrypt);
+            }
+
+            int ret = mbedtls_ccm_auth_decrypt(aes_ctx,
+                                               AES_BLOCK_SIZE,
+                                               nonce, AES_NONCE_SIZE,
+                                               NULL, 0,
+                                               ciphertext, plaintext,
+                                               mac, AES_MAC_SIZE);
+
+            if (perf_decrypt != NULL) {
+                ox_perf_counter_stop(perf_decrypt, AES_BLOCK_SIZE);
+            }
+
+            if (ret != 0) {
+                uni_hal_io_stdio_printf("[DECRYPT] ERROR: ret=%d\r\n", ret);
+                ctx->decrypt_buf_fill = 0;
+                return false;
+            }
+
+            ctx->block_counter++;
+            ctx->decrypt_buf_fill = 0;
+
+            if (perf_queue != NULL) {
+                ox_perf_counter_start(perf_queue);
+            }
+
+            ox_trx_datamsg_t* buf = ox_trx_get_free_buffer(trx_ctx);
+            if (buf != NULL) {
+                memcpy(buf->data, plaintext, AES_BLOCK_SIZE);
+                if (!ox_trx_send_buffer(trx_ctx, buf)) {
+                    if (perf_queue != NULL) {
+                        ox_perf_counter_stop(perf_queue, 0);
+                    }
+                    uni_hal_io_stdio_printf("[DECRYPT] ERROR: send failed\r\n");
+                    return false;
+                }
+            } else {
+                if (perf_queue != NULL) {
+                    ox_perf_counter_stop(perf_queue, 0);
+                }
+                uni_hal_io_stdio_printf("[DECRYPT] ERROR: no buffers\r\n");
+                return false;
+            }
+
+            if (perf_queue != NULL) {
+                ox_perf_counter_stop(perf_queue, AES_BLOCK_SIZE);
+            }
+        }
+    }
+
+    return true;
+}
