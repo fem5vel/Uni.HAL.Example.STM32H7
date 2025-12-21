@@ -22,7 +22,7 @@ _Noreturn void _ox_stdio_task(void* params) {
     //-V1082
     ox_stdio_context_t *ctx = (ox_stdio_context_t *) params;
 
-    uni_hal_io_stdio_printf("%c%c%c%c\r\n\r\n", 0x1B, 0x5B, 0x32, 0x4A); // clear screen
+    uni_hal_io_stdio_printf("\r\n\r\n"); // clear screen
 
 
     const ox_fwinfo_t *fwinfo = ox_fwinfo_get_info(OX_FWINFO_CURRENT);
