@@ -14,7 +14,7 @@
 #if defined(STM32H7)
 
 uni_hal_rcc_stm32h7_config_t g_ox_rcc_config = {
-        .hse_enable = true,
+        .hse_enable = false,
 #if defined(TARGET_DEVICE_NUCLEO)
         .hse_bypass = true,
 #else
