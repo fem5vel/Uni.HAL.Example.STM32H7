@@ -1,383 +1,186 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Обновление ПО</title>
-    <link href="bootstrap.min.css" rel="stylesheet">
-    <style>
-        input[type="file"]::file-selector-button {
-            background-color: #6c757d;
-            color: white;
-            border: 1px solid #6c757d;
-        }
-        input[type="file"] {
-            color: #6c757d;
-        }
-        #applyBtn:disabled {
-            background-color: #6c757d;
-            border-color: #6c757d;
-        }
-        .table th {
-            width: 50%;
-        }
-        .loading-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 1050;
-            display: none;
-            justify-content: center;
-            align-items: center;
-        }
-    </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Обновление ПО</title>
+<style>:root{--primary:#3c50e0;--primary-hover:#4b64e6;--bg-body:#f1f5f9;--bg-card:#ffffff;--text-main:#1c2434;--text-light:#64748b;--border:#e2e8f0;--success:#219653;--danger:#d34053;--warning:#ffa70b}*{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}body{background:var(--bg-body);color:var(--text-main);font-size:14px;line-height:1.5;padding:20px}.header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;border-bottom:1px solid var(--border);padding-bottom:10px}.h2{font-size:24px;font-weight:700;color:var(--text-main)}.btn{display:inline-flex;align-items:center;justify-content:center;padding:8px 16px;border-radius:4px;font-weight:500;cursor:pointer;border:1px solid transparent;transition:.2s;font-size:14px;gap:6px}.btn-primary{background:var(--primary);color:#fff}.btn-primary:hover{background:var(--primary-hover)}.btn-success{background:var(--success);color:#fff}.btn-outline{background:transparent;border-color:var(--border);color:var(--text-main)}.btn-outline:hover{border-color:var(--primary);color:var(--primary)}.btn:disabled{opacity:.6;cursor:not-allowed}.card{background:var(--bg-card);border-radius:4px;box-shadow:0 1px 3px rgba(0,0,0,.1);margin-bottom:20px;border:1px solid var(--border);display:flex;flex-direction:column;height:100%}.card-header{padding:15px 20px;border-bottom:1px solid var(--border);font-weight:600;font-size:16px}.card-body{padding:20px;flex:1;display:flex;flex-direction:column}.row{display:flex;gap:20px;flex-wrap:wrap}.col{flex:1;min-width:300px}table{width:100%;border-collapse:collapse;margin-bottom:15px}th,td{padding:10px 0;text-align:left;border-bottom:1px solid var(--border)}th{width:50%;color:var(--text-light);font-weight:500}tr:last-child td,tr:last-child th{border-bottom:none}.mt-auto{margin-top:auto}.d-flex{display:flex}.justify-end{justify-content:flex-end}.gap-2{gap:10px}.d-none{display:none}.loading-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:1050;display:none;justify-content:center;align-items:center;color:#fff;font-size:18px}.spinner{border:4px solid rgba(255,255,255,.3);border-radius:50%;border-top:4px solid #fff;width:40px;height:40px;animation:spin 1s linear infinite;margin-right:10px}@keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}.toast-container{position:fixed;top:20px;right:20px;z-index:1100;display:flex;flex-direction:column;gap:10px}.toast{background:var(--bg-card);border-left:4px solid var(--primary);box-shadow:0 4px 12px rgba(0,0,0,.15);padding:15px;border-radius:4px;min-width:300px;animation:slideIn .3s;display:flex;justify-content:space-between;align-items:start}.toast-content{flex:1}.toast-title{font-weight:700;margin-bottom:5px;display:block}.toast-close{background:none;border:none;cursor:pointer;font-size:18px;color:var(--text-light);line-height:1}.toast.success{border-color:var(--success)}.toast.danger{border-color:var(--danger)}.toast.info{border-color:var(--primary)}@keyframes slideIn{from{transform:translateX(100%)}to{transform:translateX(0)}}</style>
 </head>
 <body>
-    <main class="container-fluid px-4">
-        <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-            <h1 class="h2">Обновление ПО</h1>
-            <div class="btn-toolbar mb-2 mb-md-0">
-                <div class="btn-group me-2">
-                    <button id="refreshStatusBtn" class="btn btn-sm btn-outline-secondary">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-clockwise" viewBox="0 0 16 16">
-                            <path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
-                            <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/>
-                        </svg>
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <div class="row mt-4 align-items-stretch">
-            <div class="col-md-5 d-flex">
-                <div class="card w-100">
-                    <div class="card-header">
-                        Активное ПО
-                    </div>
-                    <div class="card-body">
-                        <table class="table">
-                            <tbody>
-                                <tr><th scope="row">HMAC Валиден</th><td id="current_hmac_valid"></td></tr>
-                                <tr><th scope="row">Версия</th><td id="current_version"></td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-6">
-                <div class="card h-100">
-                    <div class="card-header">
-                        Резервное ПО
-                    </div>
-                    <div class="card-body d-flex flex-column">
-                        <table class="table table-borderless mb-3">
-                            <tbody>
-                            <tr>
-                                <th scope="row">HMAC корректен:</th>
-                                <td id="next_hmac_valid">—</td>
-                            </tr>
-                            <tr>
-                                <th scope="row">Версия:</th>
-                                <td id="next_version">—</td>
-                            </tr>
-                            </tbody>
-                        </table>
-                        <div class="mt-auto d-flex justify-content-end gap-2">
-                            <input type="file" id="firmwareFile" class="d-none" accept=".bin">
-                            <button id="downloadBtn" class="btn btn-outline-secondary">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-download me-1" viewBox="0 0 16 16">
-                                    <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5"/>
-                                    <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708z"/>
-                                </svg>
-                                Скачать
-                            </button>
-                            <button id="uploadBtn" class="btn btn-primary">Загрузить</button>
-                            <button id="applyBtn" class="btn btn-success" disabled>Применить</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-                </div>
-    </main>
-
-    <button id="spiUploadBtn" class="btn btn-primary">Загрузить файл через SPI</button>
-    <input type="file" id="spiFileInput" style="display: none;">
-
-    <!-- Toast Container -->
-    <div class="toast-container position-fixed top-0 end-0 p-3">
-        <div id="toast-template" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
-            <div class="toast-header">
-                <strong class="me-auto toast-title"></strong>
-                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
-            </div>
-            <div class="toast-body toast-body-text">
-            </div>
-        </div>
-    </div>
-
-    <!-- Loading Overlay -->
-    <div class="loading-overlay" id="loadingOverlay">
-        <div class="spinner-border text-light" role="status">
-            <span class="visually-hidden">Загрузка...</span>
-        </div>
-    </div>
-
-    <script src="bootstrap.bundle.min.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const refreshBtn = document.getElementById('refreshStatusBtn');
-            const uploadBtn = document.getElementById('uploadBtn');
-            const applyBtn = document.getElementById('applyBtn');
-            
-            const fileInput = document.getElementById('firmwareFile');
-            const currentHmacValid = document.getElementById('current_hmac_valid');
-            const currentVersion = document.getElementById('current_version');
-            const nextHmacValid = document.getElementById('next_hmac_valid');
-            const nextVersion = document.getElementById('next_version');
-            
-            const loadingOverlay = document.getElementById('loadingOverlay');
-            const toastTemplate = document.getElementById('toast-template');
-            const toastContainer = document.querySelector('.toast-container');
-
-            const downloadBtn = document.getElementById('downloadBtn');
-
-            let firmwareStatus = {};
-
-            function setUIBlocked(blocked) {
-                loadingOverlay.style.display = blocked ? 'flex' : 'none';
-                refreshBtn.disabled = blocked;
-                uploadBtn.disabled = blocked;
-                downloadBtn.disabled = blocked;
-            }
-
-            function showToast(title, message, type = 'primary') {
-                const newToast = toastTemplate.cloneNode(true);
-                newToast.id = ''; // clear template id
-                newToast.querySelector('.toast-title').textContent = title;
-                newToast.querySelector('.toast-body-text').textContent = message;
-                newToast.classList.add(`bg-${type}-subtle`);
-
-                toastContainer.appendChild(newToast);
-                
-                const toast = new bootstrap.Toast(newToast, { delay: 5000 });
-                toast.show();
-
-                newToast.addEventListener('hidden.bs.toast', () => {
-                    newToast.remove();
-                });
-            }
-
-            function clearStatusValues() {
-                currentHmacValid.innerText = '';
-                currentVersion.innerText = '';
-                nextHmacValid.innerText = '';
-                nextVersion.innerText = '';
-            }
-
-            function fetchStatus() {
-                setUIBlocked(true);
-                applyBtn.disabled = true;
-                clearStatusValues();
-
-                return fetch('/updater/status')
-                    .then(response => response.json())
-                    .then(data => {
-                        firmwareStatus = data;
-                        currentHmacValid.innerText = data.current_firmware.hmac_valid ? 'да' : 'нет';
-                        currentVersion.innerText = data.current_firmware.hmac_valid ? data.current_firmware.version : 'неизвестно';
-
-                        nextHmacValid.innerText = data.next_firmware.hmac_valid ? 'да' : 'нет';
-                        nextVersion.innerText = data.next_firmware.hmac_valid ? data.next_firmware.version : 'неизвестно';
-
-                        applyBtn.disabled = !data.next_firmware.hmac_valid;
-                        downloadBtn.disabled = false;
-
-                        if (applyBtn.disabled) {
-                            applyBtn.setAttribute('title', 'HMAC невалиден');
-                        } else {
-                            applyBtn.removeAttribute('title');
-                        }
-                        if (downloadBtn.disabled) {
-                            downloadBtn.setAttribute('title', 'HMAC невалиден');
-                        } else {
-                            downloadBtn.removeAttribute('title');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error fetching status:', error);
-                        showToast('Ошибка', 'Не удалось получить статус.', 'danger');
-                        currentHmacValid.innerText = 'Ошибка';
-                        nextHmacValid.innerText = 'Ошибка';
-                        applyBtn.disabled = true;
-                        downloadBtn.disabled = false;
-                    })
-                    .finally(() => {
-                        setUIBlocked(false);
-                    });
-            }
-
-            downloadBtn.addEventListener('click', () => {
-                setUIBlocked(true);
-
-                fetch('/updater/download')
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error('Ошибка скачивания');
-                        }
-                        return response.blob();
-                    })
-                    .then(blob => {
-                        const url = window.URL.createObjectURL(blob);
-                        const a = document.createElement('a');
-                        a.href = url;
-                        const version = firmwareStatus?.next_firmware?.version || 'unknown';
-                        const hmacStatus = firmwareStatus?.next_firmware?.hmac_valid ? 'valid' : 'invalid';
-                        a.download = `firmware_${version}_${hmacStatus}.bin`;
-                        document.body.appendChild(a);
-                        a.click();
-                        window.URL.revokeObjectURL(url);
-                        a.remove();
-                        showToast('Успех', 'Прошивка успешно скачана.', 'success');
-                    })
-                    .catch(error => {
-                        console.error('Error downloading:', error);
-                        showToast('Ошибка', `Ошибка скачивания: ${error.message}`, 'danger');
-                    })
-                    .finally(() => {
-                        setUIBlocked(false);
-                    });
-            });
-
-            const spiUploadBtn = document.getElementById('spiUploadBtn');
-            const spiFileInput = document.getElementById('spiFileInput');
-
-            spiUploadBtn.addEventListener('click', () => {
-                spiFileInput.click();
-            });
-
-            spiFileInput.addEventListener('change', async (event) => {
-                const file = event.target.files[0];
-                if (!file) return;
-
-                setUIBlocked(true);
-                try {
-                    const arrayBuffer = await file.arrayBuffer();
-                    const response = await fetch('/updater/spi', {
-                        method: 'POST',
-                        body: new Uint8Array(arrayBuffer)
-                    });
-
-                    if (response.ok) {
-                        const result = await response.text();
-                        showToast('Успех', `Файл загружен. Передано: ${result} байт`, 'success');
-                    } else {
-                        showToast('Ошибка', 'Ошибка загрузки файла', 'danger');
-                    }
-                } catch (error) {
-                    showToast('Ошибка', `Ошибка: ${error.message}`, 'danger');
-                } finally {
-                    setUIBlocked(false);
-                    spiFileInput.value = '';
-                }
-            });
-
-            refreshBtn.addEventListener('click', fetchStatus);
-            
-            fetchStatus(); // Initial fetch
-
-            uploadBtn.addEventListener('click', () => {
-                fileInput.click();
-            });
-
-            fileInput.addEventListener('change', () => {
-                if (fileInput.files.length === 0) {
-                    return; // User cancelled the file dialog
-                }
-                const file = fileInput.files[0];
-                if (file.size > 1.50004578 * 1024 * 1024) {
-                    showToast('Ошибка', 'Неверный размер ПО. Должен быть ровно 1 МиБ.', 'danger');
-                    return;
-                }
-
-                setUIBlocked(true);
-                applyBtn.disabled = true;
-
-                fetch('/updater/upload', {
-                    method: 'POST',
-                    body: file,
-                    headers: { 'Content-Type': 'application/octet-stream' }
-                })
-                .then(response => response.text())
-                .then(text => {
-                    if (isNaN(parseInt(text))) { throw new Error(text); }
-                    showToast('Успех', 'ПО успешно загружено.', 'success');
-                    fetchStatus();
-                })
-                .catch(error => {
-                    console.error('Error uploading:', error);
-                    showToast('Ошибка', `Ошибка загрузки: ${error.message}`, 'danger');
-                    setUIBlocked(false);
-                }).then(() => {
-                    // Reset file input to allow re-uploading the same file,
-                    // otherwise change event is not fired for the same file.
-                    fileInput.value = '';
-                });
-            });
-            
-            applyBtn.addEventListener('click', () => {
-                const versionToSwap = firmwareStatus.next_firmware.version;
-                let swapCompleted = false;
-
-                setUIBlocked(true);
-                applyBtn.disabled = true;
-
-                fetch('/updater/apply', { method: 'GET' })
-                    .catch(error => {
-                         // We expect the request to fail as the device reboots, so we can ignore this error
-                        console.log("Запрос на смену отправлен, устройство перезагружается.");
-                    });
-
-                showToast('В процессе', 'Команда на смену ПО отправлена. Ожидание перезагрузки устройства...', 'info');
-
-                let pollCount = 0;
-                const maxPolls = 30; // 30 polls * 2 seconds = 60 seconds timeout
-                const pollInterval = setInterval(() => {
-                    if (swapCompleted) {
-                        clearInterval(pollInterval);
-                        return;
-                    }
-                    pollCount++;
-                    fetch('/updater/status')
-                        .then(response => response.json())
-                        .then(data => {
-                            if (swapCompleted) return; // double check
-                            if (data.current_firmware.version === versionToSwap) {
-                                swapCompleted = true;
-                                clearInterval(pollInterval);
-                                showToast('Успех', 'Смена ПО прошла успешно!', 'success');
-                                fetchStatus(); // final refresh
-                            } else if (pollCount > maxPolls) {
-                                swapCompleted = true;
-                                clearInterval(pollInterval);
-                                showToast('Ошибка', 'Тайм-аут смены ПО. Устройство не вернулось с новой версией.', 'danger');
-                                fetchStatus(); // final refresh
-                            }
-                        })
-                        .catch(error => {
-                           if (pollCount > maxPolls) {
-                                swapCompleted = true;
-                                clearInterval(pollInterval);
-                                showToast('Ошибка', 'Тайм-аут смены ПО. Не удалось получить статус устройства.', 'danger');
-                                fetchStatus(); // final refresh
-                           }
-                        });
-                }, 2000);
-            });
-        });
-    </script>
+<div class="header">
+<h1 class="h2">Обновление ПО</h1>
+<button id="refreshStatusBtn" class="btn btn-outline">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"></path><path d="M1 20v-6h6"></path><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+</button>
+</div>
+<div class="row">
+<div class="col">
+<div class="card">
+<div class="card-header">Активное ПО</div>
+<div class="card-body">
+<table>
+<tbody>
+<tr><th>HMAC Валиден</th><td id="current_hmac_valid"></td></tr>
+<tr><th>Версия</th><td id="current_version"></td></tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div class="col">
+<div class="card">
+<div class="card-header">Резервное ПО</div>
+<div class="card-body">
+<table>
+<tbody>
+<tr><th>HMAC корректен:</th><td id="next_hmac_valid">—</td></tr>
+<tr><th>Версия:</th><td id="next_version">—</td></tr>
+</tbody>
+</table>
+<div class="mt-auto d-flex justify-end gap-2">
+<input type="file" id="firmwareFile" class="d-none" accept=".bin">
+<button id="downloadBtn" class="btn btn-outline">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+Скачать
+</button>
+<button id="uploadBtn" class="btn btn-primary">Загрузить</button>
+<button id="applyBtn" class="btn btn-success" disabled>Применить</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div style="margin-top: 20px;">
+<button id="spiUploadBtn" class="btn btn-primary">Загрузить файл через SPI</button>
+<input type="file" id="spiFileInput" style="display: none;">
+</div>
+<div class="toast-container" id="toastContainer"></div>
+<div class="loading-overlay" id="loadingOverlay">
+<div class="spinner"></div>
+<span>Загрузка...</span>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+const refreshBtn = document.getElementById('refreshStatusBtn');
+const uploadBtn = document.getElementById('uploadBtn');
+const applyBtn = document.getElementById('applyBtn');
+const fileInput = document.getElementById('firmwareFile');
+const currentHmacValid = document.getElementById('current_hmac_valid');
+const currentVersion = document.getElementById('current_version');
+const nextHmacValid = document.getElementById('next_hmac_valid');
+const nextVersion = document.getElementById('next_version');
+const loadingOverlay = document.getElementById('loadingOverlay');
+const toastContainer = document.getElementById('toastContainer');
+const downloadBtn = document.getElementById('downloadBtn');
+let firmwareStatus = {};
+function setUIBlocked(blocked) {
+loadingOverlay.style.display = blocked ? 'flex' : 'none';
+refreshBtn.disabled = blocked;
+uploadBtn.disabled = blocked;
+downloadBtn.disabled = blocked;
+}
+function showToast(title, message, type = 'info') {
+const toast = document.createElement('div');
+toast.className = `toast ${type}`;
+toast.innerHTML = `<div class="toast-content"><span class="toast-title">${title}</span><div>${message}</div></div><button class="toast-close" onclick="this.parentElement.remove()">×</button>`;
+toastContainer.appendChild(toast);
+setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 5000);
+}
+function clearStatusValues() {
+currentHmacValid.innerText = ''; currentVersion.innerText = ''; nextHmacValid.innerText = ''; nextVersion.innerText = '';
+}
+function fetchStatus() {
+setUIBlocked(true); applyBtn.disabled = true; clearStatusValues();
+return fetch('/updater/status').then(response => response.json()).then(data => {
+firmwareStatus = data;
+currentHmacValid.innerText = data.current_firmware.hmac_valid ? 'да' : 'нет';
+currentVersion.innerText = data.current_firmware.hmac_valid ? data.current_firmware.version : 'неизвестно';
+nextHmacValid.innerText = data.next_firmware.hmac_valid ? 'да' : 'нет';
+nextVersion.innerText = data.next_firmware.hmac_valid ? data.next_firmware.version : 'неизвестно';
+applyBtn.disabled = !data.next_firmware.hmac_valid;
+downloadBtn.disabled = false;
+if (applyBtn.disabled) applyBtn.setAttribute('title', 'HMAC невалиден'); else applyBtn.removeAttribute('title');
+if (downloadBtn.disabled) downloadBtn.setAttribute('title', 'HMAC невалиден'); else downloadBtn.removeAttribute('title');
+}).catch(error => {
+console.error('Error fetching status:', error);
+showToast('Ошибка', 'Не удалось получить статус.', 'danger');
+currentHmacValid.innerText = 'Ошибка'; nextHmacValid.innerText = 'Ошибка';
+applyBtn.disabled = true; downloadBtn.disabled = false;
+}).finally(() => setUIBlocked(false));
+}
+downloadBtn.addEventListener('click', () => {
+setUIBlocked(true);
+fetch('/updater/download').then(response => { if (!response.ok) throw new Error('Ошибка скачивания'); return response.blob(); })
+.then(blob => {
+const url = window.URL.createObjectURL(blob);
+const a = document.createElement('a'); a.href = url;
+const version = firmwareStatus?.next_firmware?.version || 'unknown';
+const hmacStatus = firmwareStatus?.next_firmware?.hmac_valid ? 'valid' : 'invalid';
+a.download = `firmware_${version}_${hmacStatus}.bin`;
+document.body.appendChild(a); a.click(); window.URL.revokeObjectURL(url); a.remove();
+showToast('Успех', 'Прошивка успешно скачана.', 'success');
+}).catch(error => {
+console.error('Error downloading:', error); showToast('Ошибка', `Ошибка скачивания: ${error.message}`, 'danger');
+}).finally(() => setUIBlocked(false));
+});
+const spiUploadBtn = document.getElementById('spiUploadBtn');
+const spiFileInput = document.getElementById('spiFileInput');
+spiUploadBtn.addEventListener('click', () => spiFileInput.click());
+spiFileInput.addEventListener('change', async (event) => {
+const file = event.target.files[0]; if (!file) return;
+setUIBlocked(true);
+try {
+const arrayBuffer = await file.arrayBuffer();
+const response = await fetch('/updater/spi', { method: 'POST', body: new Uint8Array(arrayBuffer) });
+if (response.ok) { const result = await response.text(); showToast('Успех', `Файл загружен. Передано: ${result} байт`, 'success'); }
+else { showToast('Ошибка', 'Ошибка загрузки файла', 'danger'); }
+} catch (error) { showToast('Ошибка', `Ошибка: ${error.message}`, 'danger'); }
+finally { setUIBlocked(false); spiFileInput.value = ''; }
+});
+refreshBtn.addEventListener('click', fetchStatus);
+fetchStatus();
+uploadBtn.addEventListener('click', () => fileInput.click());
+fileInput.addEventListener('change', () => {
+if (fileInput.files.length === 0) return;
+const file = fileInput.files[0];
+if (file.size > 1.50004578 * 1024 * 1024) { showToast('Ошибка', 'Неверный размер ПО. Должен быть ровно 1 МиБ.', 'danger'); return; }
+setUIBlocked(true); applyBtn.disabled = true;
+fetch('/updater/upload', { method: 'POST', body: file, headers: { 'Content-Type': 'application/octet-stream' } })
+.then(response => response.text()).then(text => {
+if (isNaN(parseInt(text))) throw new Error(text);
+showToast('Успех', 'ПО успешно загружено.', 'success'); fetchStatus();
+}).catch(error => {
+console.error('Error uploading:', error); showToast('Ошибка', `Ошибка загрузки: ${error.message}`, 'danger'); setUIBlocked(false);
+}).then(() => { fileInput.value = ''; });
+});
+applyBtn.addEventListener('click', () => {
+const versionToSwap = firmwareStatus.next_firmware.version;
+let swapCompleted = false;
+setUIBlocked(true); applyBtn.disabled = true;
+fetch('/updater/apply', { method: 'GET' }).catch(error => console.log("Запрос на смену отправлен, устройство перезагружается."));
+showToast('В процессе', 'Команда на смену ПО отправлена. Ожидание перезагрузки устройства...', 'info');
+let pollCount = 0; const maxPolls = 30;
+const pollInterval = setInterval(() => {
+if (swapCompleted) { clearInterval(pollInterval); return; }
+pollCount++;
+fetch('/updater/status').then(response => response.json()).then(data => {
+if (swapCompleted) return;
+if (data.current_firmware.version === versionToSwap) {
+swapCompleted = true; clearInterval(pollInterval);
+showToast('Успех', 'Смена ПО прошла успешно!', 'success'); fetchStatus();
+} else if (pollCount > maxPolls) {
+swapCompleted = true; clearInterval(pollInterval);
+showToast('Ошибка', 'Тайм-аут смены ПО. Устройство не вернулось с новой версией.', 'danger'); fetchStatus();
+}
+}).catch(error => {
+if (pollCount > maxPolls) {
+swapCompleted = true; clearInterval(pollInterval);
+showToast('Ошибка', 'Тайм-аут смены ПО. Не удалось получить статус устройства.', 'danger'); fetchStatus();
+}
+});
+}, 2000);
+});
+});
+</script>
 </body>
 </html>
